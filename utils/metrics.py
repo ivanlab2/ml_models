@@ -1,5 +1,6 @@
 from sklearn.model_selection import KFold
 import numpy as np
+from sklearn.metrics import r2_score
 
     
 def accuracy(y_pred,y_test):#Точность
@@ -19,7 +20,7 @@ def create_model(model_class, **init_kwargs):
     return builder
 
 
-def cross_validation(model_builder, X, y, n_splits=5, fit_params=None, fit_predict=False):
+def cross_validation(model_builder, X, y, n_splits=5, fit_params=None, fit_predict=False, regression=False):
     """
     model_class: класс модели или функция, возвращающая объект модели
     fit_params: словарь с параметрами для метода fit
@@ -37,8 +38,12 @@ def cross_validation(model_builder, X, y, n_splits=5, fit_params=None, fit_predi
         else:
             model.fit(X[train_idx], y[train_idx], **fit_params)
             y_pred = model.predict(X[test_idx])
-        accs.append(accuracy(y_pred, y[test_idx]))
-
+        if regression==True:
+            accs.append(r2_score(y[test_idx],y_pred))
+        else:
+            accs.append(accuracy(y_pred, y[test_idx]))
     return np.mean(accs)
+
+
 
 
