@@ -1,7 +1,26 @@
 import numpy as np
-from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
+from sklearn.tree import DecisionTreeRegressor
 import matplotlib.pyplot as plt
-from utils import *
+from utils.metrics import accuracy
+
+def exp_loss_antigradient(y_real, y_pred): #Подсчёт антиградиента экспоненциальной функцией потерь
+    return y_real*np.exp(-1*y_real*y_pred)
+
+def sigmoid(x): #Сигмоида для перевода логитов в вероятности классов
+    return 1/(1+np.exp(-x))
+
+def grad_descent(y_real, preds, old_preds, start_value=0.5, step_size=0.005, n_iters=50, eps=0.001): #Градиентный спуск для поиска оптимального градиентного шага
+    gamma=start_value#Начальное значение коэффициента
+    for i in range(n_iters): #Градиентный спуск
+        gradient=-np.sum(preds*y_real*np.exp(-y_real*(old_preds+gamma*preds))) #Расчёт градиента по гамме
+        step=step_size*gradient #Шаг по градиенту
+        gamma-=step
+        if np.abs(step)<=eps: #Проверка на сходимость значения
+            break
+        if gamma<=0:
+            print(f"Ошибка при минимизации: коэффициент шага оказался равным: ", {gamma})
+            gamma=0
+    return gamma
 
 class GradientBoostingClassifier():
     def __init__(self, n_trees, max_depth):
@@ -39,29 +58,3 @@ class GradientBoostingClassifier():
         probs[probs>threshold]=1#Перевод вероятностей в классы
         probs[probs<=threshold]=-1
         return probs
-    
-class RandomForest():
-    def __init__(self, n_trees, max_depth,  n_features,  min_samples_leaf=1, min_samples_split=2, criterion='entropy', eps_1=0.95, eps_2=0.9):
-        self.n_trees=n_trees
-        self.n_features=n_features
-        self.max_depth=max_depth
-        self.min_samples_leaf=min_samples_leaf
-        self.min_samples_split=min_samples_split
-        self.criterion=criterion
-        self.eps_1=eps_1 #Критерий включения дерева по точности на обучающей выборке
-        self.eps_2=eps_2 #Критерий включения дерева по точности на отложенной выборке
-    def fit(self,X,y):
-        self.trees=[]
-        while len(self.trees)<self.n_trees:
-            tree=DecisionTreeClassifier(max_features=self.n_features, max_depth=self.max_depth, min_samples_split=self.min_samples_split,min_samples_leaf=self.min_samples_leaf,criterion=self.criterion)
-            t=np.random.choice(np.arange(X.shape[0]),size=(np.round(X.shape[0]*0.6).astype('int')), replace=True)
-            tree.fit(X[t,:],y[t])
-            if (accuracy(tree.predict(X[t,:]),y[t])>=self.eps_1) and (accuracy(tree.predict(X[~t,:]),y[~t])>=self.eps_2):
-                self.trees.append(tree)
-        
-    def predict(self,X):
-        preds=[]
-        for tree in self.trees:#Предсказание по каждому дереву
-            preds.append(tree.predict(X))
-        y_pred=np.apply_along_axis(find_most_frequent, axis=0,arr=np.array(preds))#Определение итогового предсказания голосованием
-        return y_pred
