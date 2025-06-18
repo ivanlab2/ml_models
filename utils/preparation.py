@@ -7,6 +7,14 @@ def min_max_scale(X):
     X_st=(X-mins_x)/(maxs_x-mins_x)
     return X_st
 
+def standartize_data(data):#Стандартизация данных
+    d=(data-data.mean())/data.std()
+    return d.to_numpy()
+
+def standartize_data_to_matrix(data): #Стандартизация данных
+    d=(data-data.mean())/data.std()
+    return np.asmatrix(d)
+
 def prepare_recommendation_data(df):
     #Получение индексов уникальных пользователей и фильмов
     unique_users = sorted(df['userId'].unique())

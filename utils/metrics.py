@@ -63,6 +63,18 @@ def get_coherence_score(vectorizer, phi, texts, metric='u_mass'):#Расчёт �
     coherence_score = coherence_model.get_coherence()#Расчёт когерентности
     print(f"Когерентность тем ({metric}): {coherence_score:.4f}")
 
+def euclide(x,y):#Расчёт евклидового расстояния между двумя точками
+    return np.sqrt(np.sum(np.power(x-y,2)))
+
+def max_n_em(A,data, i_1,i_2):#Метод дальнего соседа для расчёта среднего межкластерного расстояния
+    m=-1
+    for i in A[i_1][0]:
+        for j in A[i_2][0]:
+            t=euclide(data[i],data[j])
+            if m<t:
+                m=t
+    return m
+
 
 
 
