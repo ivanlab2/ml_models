@@ -1,19 +1,13 @@
 from sklearn.model_selection import KFold
 import numpy as np
 from sklearn.metrics import r2_score
+from gensim.models.coherencemodel import CoherenceModel
+from gensim.corpora import Dictionary
 
     
 def accuracy(y_pred,y_test):#Точность
     return np.sum(y_pred==y_test)/len(y_test)
-'''
-def cross_validation(randomforest, X,y,n_splits):#Кросс-валидация
-    kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
-    accs=[]
-    for trains,tests in kf.split(X):#n разбиений выборки на test и train
-        randomforest.fit(X[trains,:],y[trains])
-        accs.append(accuracy(randomforest.predict(X[tests,:]),y[tests]))#Оценивание на каждом разбиении
-    return np.mean(accs)#Выдача среднего accuracy по каждому разбиению
-'''
+
 def create_model(model_class, **init_kwargs):
     def builder():
         return model_class(**init_kwargs)
@@ -43,6 +37,31 @@ def cross_validation(model_builder, X, y, n_splits=5, fit_params=None, fit_predi
         else:
             accs.append(accuracy(y_pred, y[test_idx]))
     return np.mean(accs)
+
+
+def get_topics_words(phi, feature_names, top_n=10):#Получение топ-слов по каждой теме
+    return [
+        [feature_names[i] for i in topic.argsort()[-top_n:][::-1]]
+        for topic in phi
+    ]
+
+def get_coherence_score(vectorizer, phi, texts, metric='u_mass'):#Расчёт когерентности тем
+
+    feature_names = vectorizer.get_feature_names_out()
+    topics = get_topics_words(phi, feature_names, top_n=10)#Получение топ-слов
+    analyzer = vectorizer.build_analyzer()
+    tokens = [analyzer(doc) for doc in texts]#Получение токенов
+    dictionary = Dictionary(tokens)#Получение словаря
+
+    
+    coherence_model = CoherenceModel(
+        topics=topics,
+        texts=tokens,
+        dictionary=dictionary,
+        coherence=metric
+    )
+    coherence_score = coherence_model.get_coherence()#Расчёт когерентности
+    print(f"Когерентность тем ({metric}): {coherence_score:.4f}")
 
 
 
