@@ -27,3 +27,17 @@ def prepare_recommendation_data(df):
     R= df[['user_idx', 'item_idx', 'rating']].to_numpy()#Возвращение обновленной таблицы
     R_train, R_test = train_test_split(R, test_size=0.2, random_state=42)#Разделение на тренировочную и тестовую выборки
     return R_train, R_test, len(user_id_map), len(item_id_map)
+
+def split_data(x,y,crit,value):#Функция разделения данных для деревьев решений
+    try: 
+        x[:,crit].astype('float64')
+        X_r=x[np.where(x[:,crit]>=value)]
+        X_l=x[np.where(x[:,crit]<value)]
+        y_r=y[np.where(x[:,crit]>=value)]
+        y_l=y[np.where(x[:,crit]<value)]
+    except ValueError:
+        X_r=x[np.where(x[:,crit]==value)]
+        X_l=x[np.where(x[:,crit]!=value)]
+        y_r=y[np.where(x[:,crit]==value)]
+        y_l=y[np.where(x[:,crit]!=value)]
+    return X_r, X_l, y_r,y_l
